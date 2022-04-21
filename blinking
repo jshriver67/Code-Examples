@@ -1,0 +1,49 @@
+s16 m_CurrentContrast = DEFAULT_CONTRAST;
+
+static void AdjustTempContrast(s16 temperature)
+{
+    s32 nelem = sizeof(tempRangeArr)/sizeof(TempRange_t);
+
+    for (s16 i = 0, i < nelem; i++)
+    {   //Scan the range
+        if ( (temperature > TemperRangeArr[i].lowEndTemp) && 
+             (temperature <= TempRangeArr[i].highEndTemp) )
+        {   //Found our range
+            if (tempRangeArr[i].contrast != m_CurrentContrast)
+            {   //The contrast did change - store the current one
+                m_CurrentContrast = tempRangeArr[i].contrast;
+                //Set the contrast
+                glcd_command(GLCD_CMD_VOLUME_MODE);
+                glcd_command(tempRangeArr[i].contrast):
+                return;
+            }
+
+        }
+    }
+    // We are here -- NO range was found
+    if (tempRangeArr[i].contrast != DEFAULT_CONTRAST)
+    {
+            m_CurrentContrast = DEFAULT_CONTRAST;
+            //Set the contrast
+            glcd_command(GLCD_CMD_VOLUME_MODE);
+            glcd_command(m_CurrentContrast):
+
+    }
+
+}
+
+//What happened
+//1. We hadn't updated the code but now had a blinking LCD
+//2. We hadn't updated the default contrast
+//3. We had put in a "legitimate temperature compesation table not all default values"
+
+//What the code was doing (example)  assume the temperature is in the third bucket
+//                 m_CurrentContrast(before)  bucket    m_CurrentContrast(after)   early return
+//1. First pass    DEFAULT_CONTRAST           3         tempRangeArr[3].contrast   yes
+//2. Second pass   tempRangeArr[3].contrast   3         DEFAULT_CONTRAST           no:(
+
+//The intended design is
+//If the value has changed set it
+//If the value isin't found set it to the default
+//Unfortunately, the actual design is 
+//If the value isin't found set it to the default or if the value hasn't changed:(
